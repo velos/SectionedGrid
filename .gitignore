@@ -1,0 +1,14 @@
+bin/**
+gen/**
+*.swp
+*~
+*.bak
+*.tmp
+local.properties
+*.DS_*
+build.properties
+tmp/**
+*.apk
+ignore/**
+___*
+*.pdf

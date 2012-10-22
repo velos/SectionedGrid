@@ -1,0 +1,7 @@
+Sectioned Grid Adapter
+
+Copyright 2012 Velos Mobile
+
+This product includes software developed at
+Velos Mobile (http://www.velosmobile.com)
+
