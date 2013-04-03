@@ -3,6 +3,7 @@ package com.velosmobile.utils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ViewTreeObserver;
 import android.widget.BaseAdapter;
 import android.widget.TextView;
 
@@ -18,12 +19,22 @@ import android.widget.TextView;
  */
 public abstract class SectionableAdapter extends BaseAdapter {
 	
+	public static final int MODE_VARY_WIDTHS = 0;
+	public static final int MODE_VARY_COUNT = 1;
+	
 	private LayoutInflater inflater;
 	private int rowResID;
 	private int headerID;
 	private int itemHolderID;
 	private int colCount;
 	private int sectionsCount;
+	private int resizeMode;
+	private ViewGroup measuredRow;
+	
+	public SectionableAdapter(LayoutInflater inflater, int rowLayoutID, int headerID, int itemHolderID)
+	{
+		this(inflater, rowLayoutID, headerID, itemHolderID, MODE_VARY_WIDTHS);
+	}
 	
 	/**
 	 * Constructor.
@@ -32,16 +43,23 @@ public abstract class SectionableAdapter extends BaseAdapter {
 	 * @param headerID resource ID for the header element contained within the grid row.
 	 * @param itemHolderID resource ID for the cell wrapper contained within the grid row. This View must only contain cells.
 	 */
-	public SectionableAdapter(LayoutInflater inflater, int rowLayoutID, int headerID, int itemHolderID)
+	public SectionableAdapter(LayoutInflater inflater, int rowLayoutID, int headerID, int itemHolderID, int resizeMode)
 	{
 		super();
 		this.inflater = inflater;
 		this.rowResID = rowLayoutID;
 		this.headerID = headerID;
 		this.itemHolderID = itemHolderID;
+		this.resizeMode = resizeMode;
 		// Determine how many columns our row holds.
 		View row = inflater.inflate(rowLayoutID, null);
+		if (row == null)
+			throw new IllegalArgumentException("Invalid row layout ID provided.");
 		ViewGroup holder = (ViewGroup)row.findViewById(itemHolderID);
+		if (holder == null)
+			throw new IllegalArgumentException("Item holder ID was not found in the row.");
+		if (holder.getChildCount() == 0)
+			throw new IllegalArgumentException("Item holder does not contain any items.");
 		colCount = holder.getChildCount();
 		sectionsCount = getSectionsCount();
 	}
@@ -137,10 +155,18 @@ public abstract class SectionableAdapter extends BaseAdapter {
 				realPosition += sectionCount;
 			}
 		}
-		// Phew... okay! Now we just need to build it!
 		if (convertView == null)
 		{
 			convertView = inflater.inflate(rowResID, parent, false);
+			if (measuredRow == null && resizeMode == MODE_VARY_COUNT)
+			{
+				measuredRow = (ViewGroup)convertView;
+				// In this mode, we need to learn how wide our row will be, so we can calculate
+				// the number of columns to show.
+				// This listener will notify us once the layout pass is done and we have our
+				// measurements.
+				measuredRow.getViewTreeObserver().addOnGlobalLayoutListener(layoutObserver);
+			}
 		}
 		int lastType = -1;
 		if (realPosition > 0)
@@ -162,10 +188,11 @@ public abstract class SectionableAdapter extends BaseAdapter {
 		}
 		customizeRow(position, convertView);
 
-		for (int i = 0; i < colCount; ++i)
+		ViewGroup itemHolder = (ViewGroup)convertView.findViewById(itemHolderID);
+		for (int i = 0; i < itemHolder.getChildCount(); ++i)
 		{
-			View child = ((ViewGroup)convertView.findViewById(itemHolderID)).getChildAt(i);
-			if (i < viewsToDraw && child != null)
+			View child = itemHolder.getChildAt(i);
+			if (i < colCount && i < viewsToDraw && child != null)
 			{
 				bindView(child, realPosition + i);
 				child.setVisibility(View.VISIBLE);
@@ -177,5 +204,29 @@ public abstract class SectionableAdapter extends BaseAdapter {
 		}
 		return convertView;
 	}
+
+	private ViewTreeObserver.OnGlobalLayoutListener layoutObserver = new ViewTreeObserver.OnGlobalLayoutListener() {
+		
+		// The better-named method removeOnGlobalLayoutListener isn't available until a later API version.
+		@SuppressWarnings("deprecation")
+		@Override
+		public void onGlobalLayout() {
+			if (measuredRow != null)
+			{
+				int rowWidth = measuredRow.getWidth();
+				ViewGroup childHolder = (ViewGroup)measuredRow.findViewById(itemHolderID);
+				View child = childHolder.getChildAt(0);
+				int itemWidth = child.getWidth();
+				if (rowWidth > 0 && itemWidth > 0)
+				{
+					colCount = rowWidth / itemWidth;
+					// Make sure this listener isn't called again after we layout for the next time.
+					measuredRow.getViewTreeObserver().removeGlobalOnLayoutListener(this);
+					// The grid will now update with the correct column count.
+					notifyDataSetChanged();
+				}
+			}
+		}
+	};
 	
 }

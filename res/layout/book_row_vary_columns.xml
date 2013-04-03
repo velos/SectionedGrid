@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical" >
+    <TextView 
+        android:id="@+id/bookRow_header"
+        style="@android:style/TextAppearance.Holo.Large"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingLeft="8dp"
+        android:visibility="gone"
+        />
+    <LinearLayout 
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:id="@+id/bookRow_itemHolder"
+        >
+        <include layout="@layout/book_item_vary_columns"/>
+        <include layout="@layout/book_item_vary_columns"/>
+        <include layout="@layout/book_item_vary_columns"/>
+        <include layout="@layout/book_item_vary_columns"/>
+        <include layout="@layout/book_item_vary_columns"/>
+        <include layout="@layout/book_item_vary_columns"/>
+        <include layout="@layout/book_item_vary_columns"/>
+        <include layout="@layout/book_item_vary_columns"/>
+        <include layout="@layout/book_item_vary_columns"/>
+        <include layout="@layout/book_item_vary_columns"/>
+    </LinearLayout>
+
+</LinearLayout>

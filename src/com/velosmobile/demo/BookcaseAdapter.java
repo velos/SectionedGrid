@@ -43,8 +43,8 @@ public class BookcaseAdapter extends SectionableAdapter implements
 	private Activity activity;
 
 	public BookcaseAdapter(Activity activity, LayoutInflater inflater,
-			int rowLayoutID, int headerID, int itemHolderID) {
-		super(inflater, rowLayoutID, headerID, itemHolderID);
+			int rowLayoutID, int headerID, int itemHolderID, int resizeMode) {
+		super(inflater, rowLayoutID, headerID, itemHolderID, resizeMode);
 		this.activity = activity;
 	}
 
